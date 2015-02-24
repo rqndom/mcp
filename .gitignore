@@ -1,0 +1,5 @@
+*.pyc
+_mcp.so
+TODO
+misc/
+build/
