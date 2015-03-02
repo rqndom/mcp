@@ -172,7 +172,7 @@ def test_Sampler_interval_ok():
 	times = sorted(list(timestamps))
 	intervals = [t1 - t0 for t0, t1 in zip(times[:-1], times[1:])]
 	
-	assert all([abs(x - interval) < 0.1 * interval for x in intervals])
+	assert all([abs(x - interval) < 2 * interval for x in intervals])
 	
 @pytest.mark.statistical
 @pytest.mark.slow

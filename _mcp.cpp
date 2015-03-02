@@ -11,6 +11,7 @@
 #include <iterator>
 #include <fstream>
 #include <sstream>
+#include <random>
 
 #ifdef MS_WINDOWS
 #include <windows.h>
@@ -128,14 +129,19 @@ void state_func(Sampler* sampler)
 	}
 #endif
 
+	double period = double(Clock::period::num) / Clock::period::den;
+    std::mt19937 rnd_gen;
+	std::uniform_real_distribution<> rnd;
+
 	// sampling loop
 	while (sampler->running) {
 		// sleep during the current interval
-		double period = double(Clock::period::num) / Clock::period::den;
 		Clock::duration now = Clock::now().time_since_epoch();
 		
+		double dither = rnd(rnd_gen);
 		double t_curr = now.count() * period;
-		double t_next = (long(t_curr / sampler->interval) + 1) * sampler->interval;
+		double t_next = (long(t_curr / sampler->interval) + 1
+										+ dither) * sampler->interval;
 
 		Clock::time_point tp = Clock::time_point(
 			Clock::duration(Clock::rep(t_next / period)));

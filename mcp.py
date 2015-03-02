@@ -10,6 +10,7 @@
 # TODO: donner un moyen (genre decorator) de patcher manuellement /
 #		unifier le patchage de lib / monitoring de thread spawn
 #		(plutot un couple spawn_process / spawn_thread)
+# TODO: encore des conflits de noms / '__main__' quand l'interval est très court
 
 __version__ = '0.1'
 __author__ = 'Romain Vavassori'
@@ -25,6 +26,13 @@ import sys
 import os
 import xml.etree.ElementTree as xml
 import inspect
+
+import atexit
+import argparse
+import itertools
+import Queue
+import time
+import re
 
 ########################################################################
 # Patching
@@ -73,37 +81,38 @@ class ThreadInfo:
 			frame = frame.f_back
 		return frame_count - 1
 
+	def watch_thread(self, func):
+		@functools.wraps(func)
+		def func_wrapper(*args, **kw):
+			height = ThreadInfo.stack_height()
+			self.register_tid(frame_hide=(height - 1, height))
+			try:
+				result = func(*args, **kw)
+			finally:
+				self.unregister_tid()
+					
+			return result
+		return func_wrapper
+	
+	def watch_process(self, func):
+		@functools.wraps(func)
+		def func_wrapper(*args, **kw):
+			sampler = Sampler(self.accumulator, self.interval)
+			sampler.start()
+			return func(*args, **kw)
+		return func_wrapper
+
 	def _thread_patch(self, start_func):
 		@functools.wraps(start_func)
 		def start_wrapper(function, args, kwargs={}):
-			@functools.wraps(function)
-			def func_wrapper(*args, **kwargs):
-				height = ThreadInfo.stack_height()
-				self.register_tid(frame_hide=(height - 1, height))
-				try:
-					result = function(*args, **kwargs)
-				finally:
-					self.unregister_tid()
-				return result
-				
-			return start_func(func_wrapper, args, kwargs)
+			return start_func(self.watch_thread(function), args, kwargs)
 		
 		return start_wrapper
 
 	def _multiprocessing_patch(self, start_func):
 		@functools.wraps(start_func)
 		def start_wrapper(Process_self):
-			original_run = Process_self.run
-			
-			@functools.wraps(original_run)
-			def run_wrapper(*args, **kw):
-				import mcp
-				sampler = mcp.Sampler(self.accumulator, self.interval)
-				sampler.start()
-				
-				return original_run(*args, **kw)
-
-			Process_self.run = run_wrapper
+			Process_self.run = self.watch_process(Process_self.run)
 			return start_func(Process_self)
 		
 		return start_wrapper
@@ -188,15 +197,24 @@ class Sampler(threading.Thread):
 		self.accumulator = accumulator
 		self.sampler = _mcp.Sampler(interval)
 		
+		# force queue init to avoid tracking its spawned thread.
+		accumulator.send(None, None)
+		
 		self.thread_info = ThreadInfo(accumulator, interval)
 		self.thread_info.install_patchs()
 		
-		# Main thread has already spawned, we need to register it manually.
+		# main thread has already spawned, we need to register it manually.
 		height = ThreadInfo.stack_height()
 		frame_hide = (0 if origin else height - 2, height - 1)
 			
 		self.thread_info.register_tid(frame_hide=frame_hide)
 	
+	def watch_thread(self, func):
+		self.thread_info.watch_thread(func)
+	
+	def watch_process(self, func):
+		self.thread_info.watch_process(func)
+		
 	def stop(self):
 		self.running = False
 	
@@ -209,6 +227,7 @@ class Sampler(threading.Thread):
 		while self.running:
 			samples = self.sampler.wait_samples()
 			frames = sys._current_frames()
+			stacks = {}
 			
 			for time_stamp, tid, running in samples:
 				if running:
@@ -217,8 +236,12 @@ class Sampler(threading.Thread):
 					except KeyError:
 						continue
 					
-					frame = frames[py_tid]
-					stack_info = StackInfo.extract(frame, hide=frame_hide)
+					try:
+						stack_info = stacks[py_tid]
+					except KeyError:
+						frame = frames[py_tid]
+						stack_info = StackInfo.extract(frame, hide=frame_hide)
+						stacks[py_tid] = stack_info
 					
 					self.accumulator.send(time_stamp, stack_info)
 				else:
@@ -244,9 +267,10 @@ class Accumulator:
 		try:
 			while True:
 				time, data = self._queue.get(timeout=timeout)
-				sample = self._samples.setdefault(time, [])
-				if data is not None:
-					sample.append(data)
+				if time is not None:
+					sample = self._samples.setdefault(time, [])
+					if data is not None:
+						sample.append(data)
 		except Queue.Empty:
 			pass
 			
@@ -445,7 +469,13 @@ class Formatter:
 			})
 
 		def get_line(frame):
-			return modules[frame.name]['code'][frame.line - 1]
+			try:
+				return modules[frame.name]['code'][frame.line - 1]
+			except Exception as e:
+				# DEBUG
+				print frame.name, frame.path, len(modules[frame.name]['code']),
+				print frame.line, frame.func_name, frame.func_line
+				raise e
 
 		for stacks in samples:
 			for stack in stacks:
@@ -504,6 +534,21 @@ class Formatter:
 			]
 		)
 		
+		data = (samples, modules, functions,
+				max_percent, lines_max_percent)
+				
+		if self.args.plain:
+			self._add_plain_profile(report, data)
+		else:
+			self._add_plain_profile(report, data)
+			# TODO
+			#~self._add_extended_profile(report, data)
+		
+		report.write_to(self.args.report_file)
+	
+	def _add_plain_profile(self, report, data):
+		_, modules, functions, max_percent, lines_max_percent = data
+		
 		# summary
 		report.add_title('Summary')
 		
@@ -535,8 +580,12 @@ class Formatter:
 				lines.insert(i, (0, 0, None))
 				
 			report.add_profile_table(lines, max_percent, lines_max_percent)
-		
-		report.write_to(self.args.report_file)
+
+	def _add_extended_profile(self, report, data):
+		_, _, _, _, _ = data
+
+		# timeline
+		report.add_title('Timeline')
 
 ########################################################################
 # Main program
@@ -610,12 +659,5 @@ def main():
 	sys.exit()
 
 if __name__ == '__main__':
-	import atexit
-	import argparse
-	import itertools
-	import Queue
-	import time
-	import re
-	
 	main()
 	
