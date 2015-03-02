@@ -1,5 +1,6 @@
 *.pyc
-_mcp.so
+*.so
+report.html
 TODO
 misc/
 build/
