@@ -8,7 +8,11 @@ _mcp_module = Extension(
 
 setup(
 	name = 'mcp',
-	version = '1.0',
+	version = '0.1',
 	description = 'Probabilistic profiler',
+	author='Romain Vavassori',
+	author_email='romain.vavassori@hotmail.com',
+	url='http://github.com/rqndom/mcp',
+	py_modules = ['mcp'],
 	ext_modules = [_mcp_module]
 )
