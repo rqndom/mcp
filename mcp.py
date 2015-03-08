@@ -33,6 +33,7 @@ import itertools
 import Queue
 import time
 import re
+import json
 
 ########################################################################
 # Patching
@@ -416,6 +417,19 @@ class ReportStructure:
 			code_column,
 		])
 		
+	def add_canvas(self):
+		self.document.find('body').append(
+			Xml('canvas', {
+				'id': 'timeline',
+				'style': 'width: 100%; height: 100px; border: solid;'
+						'border-width: 1px; border-color: #ddd;'
+			}).append(Xml(None))
+		)
+		
+	def add_script(self, attr={}, text=None):
+		attr.setdefault('type', 'text/javascript')
+		self.document.find('body').append(Xml('script', attr, text).append(Xml(None)))
+		
 	def write_to(self, file_name):
 		self.document.tree().write(file_name, encoding='utf-8')
 	
@@ -540,9 +554,7 @@ class Formatter:
 		if self.args.plain:
 			self._add_plain_profile(report, data)
 		else:
-			self._add_plain_profile(report, data)
-			# TODO
-			#~self._add_extended_profile(report, data)
+			self._add_extended_profile(report, data)
 		
 		report.write_to(self.args.report_file)
 	
@@ -582,10 +594,67 @@ class Formatter:
 			report.add_profile_table(lines, max_percent, lines_max_percent)
 
 	def _add_extended_profile(self, report, data):
-		_, _, _, _, _ = data
+		samples, modules, functions, _, _ = data
+		
+		def mod_index(frame):
+			for i, module in enumerate(modules):
+				if module['name'] == frame.name:
+					return i
+			raise Exception
+		
+		def func_index(frame):
+			for i, func in enumerate(functions):
+				if func['name'] == frame.func_name:
+					return i
+			raise Exception
+		
+		def line_index(frame):
+			for module in modules:
+				if module['name'] == frame.name:
+					for i, line in enumerate(module['code']):
+						if line['line'] == frame.line:
+							return i
+			raise Exception
+			
+		samples = {
+			t: [
+				[
+					(mod_index(frame), func_index(frame), line_index(frame))
+					for frame in stack
+				]
+				for stack in stacks
+			]
+			for t, stacks in samples.iteritems()
+		}
+		
+		for module in modules:
+			del module['current']
+			del module['outer']
+		
+			for line in module['code']:
+				del line['current']
+				del line['outer']
+		
+		for function in functions:
+			del function['current']
+			del function['outer']
+		
+		sample_data = {
+			'samples': samples,
+			'modules': modules,
+			'functions': functions
+		}
 
 		# timeline
 		report.add_title('Timeline')
+		report.add_canvas()
+		
+		# scripts
+		report.add_script(
+			attr={'type': 'application/json', 'id': 'data'},
+			text=json.dumps(sample_data)
+		)
+		report.add_script(attr={'src': 'formatter.js'})
 
 ########################################################################
 # Main program
