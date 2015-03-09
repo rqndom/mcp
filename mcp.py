@@ -695,7 +695,10 @@ def _program_wrapper(accumulator, interval, script, args):
 	sampler.start()
 	
 	# Execute profiled code in clean environment
-	env = {'__name__': '__main__'}
+	env = {
+		'__name__': '__main__',
+		'__file__': script,
+	}
 	execfile(script, env)
 
 def main():

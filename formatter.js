@@ -1,5 +1,12 @@
 
 ////////////////////////////////////////////////////////////////////////
+// global parameters
+////////////////////////////////////////////////////////////////////////
+
+var dynamic_update = false;
+var bin_size = 5;
+
+////////////////////////////////////////////////////////////////////////
 // data
 ////////////////////////////////////////////////////////////////////////
 
@@ -32,8 +39,8 @@ function t_window(x_start, x_end) {
 	];
 }
 
-function t_to_px(t) { return Math.floor((t - t0) / (t1 - t0) * (canvas.width - 1)); }
-function px_to_t(px) { return t0 + px * (t1 - t0) / (canvas.width - 1); }
+function t_to_px(t) { return (t - t0) / (t1 - t0) * (canvas.width + 1) - 1; }
+function px_to_t(px) { return t0 + (px + 1) * (t1 - t0) / (canvas.width + 1); }
 
 // max usage
 var max_percent, lines_max_percent;
@@ -131,40 +138,102 @@ function compute_usage() {
 var canvas = document.getElementById('timeline');
 var ctx = canvas.getContext('2d');
 
+var timeline = null;
+
 function draw_timeline() {
 	var w = canvas.width;
 	var h = canvas.height;
 		
 	ctx.fillStyle = "#ffffff";
 	ctx.fillRect(0, 0, w, h);
-
-	for (var t of ts) {
-		var x = t_to_px(parseFloat(t)) + 0.5;
-		var y = data.samples[t].length * 100 / 8;
+	
+	if (ts.length <= 1 || w == 0)
+		return;
+	
+	// recompute timeline
+	if (timeline === null || timeline.width != w) {
+		var t = ts.map(parseFloat);
+		var s = ts.map(x => samples[x].length);
 		
+		// draw samples
+		var s_max = Math.max(...s);
 		ctx.beginPath();
-		ctx.moveTo(x, 0);
-		ctx.lineTo(x, h);
-		ctx.strokeStyle = "#dddddd";
+			
+		for (var i = 0; i < t.length; ++i) {
+			var x = t_to_px(t[i]) + 0.5;
+			var y = s[i] / s_max;
+			
+			ctx.moveTo(x, h);
+			ctx.lineTo(x, h * (1 - y));
+		}
+		
+		ctx.strokeStyle = "#eeeeee";
 		ctx.stroke();
 		
+		// compute bins
+		var bin_count = Math.ceil(ts.length / bin_size);
+		var bin_i = [];
+		bin_i[0] = 0;
+		
+		var j = 1;
+		for (var i = 1; i < bin_count; ++i) {
+			var t_curr = (t[t.length - 1] - t[0]) * i / bin_count + t[0];
+			while (t[j] < t_curr) ++j;
+			
+			t.splice(j, 0, t_curr);
+			s.splice(j, 0, (s[j-1] * (t[j] - t_curr) +
+				s[j] * (t_curr - t[j-1])) / (t[j] - t[j-1]));
+			
+			bin_i[i] = j;
+		}
+		
+		bin_i[bin_count] = t.length - 1;
+
+		var bin_i2 = bin_i.slice(0, -1).map((x, i) => [x, bin_i[i+1]]);
+		var bin_t = bin_i2.map(x => (t[x[1]] + t[x[0]]) / 2);
+		
+		var integral_s = function(x) {
+			var int_s = 0;
+			for (var i = x[0]; i < x[1]; ++i)
+				int_s += 0.5 * (s[i+1] + s[i]) * (t[i+1] - t[i]);
+			return int_s / (t[x[1]] - t[x[0]]);
+		};
+		var bin_s = bin_i2.map(integral_s);
+
+		var bin_s_max = Math.max(...bin_s);
+
+		var x = bin_t.map(t => (t_to_px(t) + 0.5));
+		var y = bin_s.map(s => h * (1 - s / bin_s_max));
+		
+		// draw bins
 		ctx.beginPath();
-		ctx.moveTo(x, h - y);
-		ctx.lineTo(x, h);
+		ctx.moveTo(x[0], y[0]);
+			
+		for (var i = 1; i < x.length; ++i)
+			ctx.lineTo(x[i], y[i]);
+		
 		ctx.strokeStyle = "#0000ff";
 		ctx.stroke();
+			
+		timeline = ctx.getImageData(0, 0, w, h);
 	}
 	
-	if (ts.length > 0 && x_end !== null) {
+	// draw timeline
+	ctx.putImageData(timeline, 0, 0);
+	
+	// draw selection
+	if (x_end !== null) {
 		var x0 = t_to_px(t_start) + 0.5;
 		var x1 = t_to_px(t_end) + 0.5;
 		
 		ctx.globalAlpha = 0.5;
-
-		ctx.fillStyle = "#ff8888";
+		ctx.fillStyle = "#ff0000";
+		
 		ctx.fillRect(x0, 0, x1 - x0, h);
 		
+		ctx.globalAlpha = 1;
 		ctx.strokeStyle = "#ff0000";
+		
 		ctx.beginPath();
 		ctx.moveTo(x0, 0);
 		ctx.lineTo(x0, h);
@@ -172,7 +241,6 @@ function draw_timeline() {
 		ctx.lineTo(x1, h);
 		ctx.stroke();
 
-		ctx.globalAlpha = 1;
 	}
 
 }
@@ -349,10 +417,10 @@ window.addEventListener('resize', on_resize, false);
 var track_mouse = false;
 var x_start = 0, x_end = null;
 
-function update_data() {
+function update_data(update_all) {
 	[t_start, t_end] = t_window(x_start, x_end);
-	update_usage();
 	draw_timeline();
+	if (update_all) update_usage();
 }
 
 function on_mouse_down(e) {
@@ -369,14 +437,14 @@ function on_mouse_move(e) {
 	var border = parseInt(canvas.style.borderWidth);
 	x_end = e.clientX - canvas.offsetLeft - border;
 	
-	update_data();
+	update_data(dynamic_update);
 }
 
 function on_mouse_up(e) {
 	if (!track_mouse) return;
 	track_mouse = false;
 	
-	update_data();
+	update_data(true);
 }
 
 canvas.addEventListener('mousedown', on_mouse_down, false);
