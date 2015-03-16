@@ -8,8 +8,8 @@ use deterministic approach by tracing each function call.
 
 Our method allows us to have a constant low overhead as well as
 performance information up to the level of a single line.
-Moreover this profiler manage multithreaded applications (but only it
-knows about python threads).
+Moreover this profiler can manage multithreaded applications (but it will
+only know about python threads).
 
 After execution, all profiling information is contained in a single
 nice colorful HTML report, which can be manipulated by selecting parts
