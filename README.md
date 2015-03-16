@@ -1,6 +1,6 @@
 # MCP
 
-MCP is a statistical profiler for Python.
+MCP is a statistical profiling module for Python.
 
 The profiling of a running script is based on sampling the script state
 at random time intervals (Monte Carlo), whereas other profilers usually
@@ -8,6 +8,8 @@ use deterministic approach by tracing each function call.
 
 Our method allows us to have a constant low overhead as well as
 performance information up to the level of a single line.
+Moreover this profiler manage multithreaded applications (but only it
+knows about python threads).
 
 After execution, all profiling information is contained in a single
 nice colorful HTML report, which can be manipulated by selecting parts
@@ -39,9 +41,18 @@ A more detailed help can be found with:
 
 ## Report structure
 
-The basic information provided by each report is the percentage of time passed in each object (module, function, line, ...).
+For each function (or module, or line) there are two main data:
+* time actually spend in the function (in blue, or the first percentage column)
+* total time spend in the function, with called sub functions (in blue
+and cyan, or the second percentage column)
 
+Number columns represent the percentage of samples located inside a
+given function, module or line.
+For a given function, 100 will means that all samples are located in it (in case of a single threaded application).
+A value of 200 is possible if the function is executed on two threads (on two different cores).
 
+Recursive functions are counted as one call per sample, which is the
+expected behaviour.
 
 ## Examples
 
