@@ -45,8 +45,9 @@ The basic information provided by each report is the percentage of time passed i
 
 ## Examples
 
-* [Plain HTML report](http://rawgit.com/rqndom/mcp/master/examples/plain_report.html)
-* [Extended report with dynamic timeline](http://rawgit.com/rqndom/mcp/master/examples/extended_report.html)
+Profiling of [curve.py](http://github.com/rqndom/curve.py):
+* [Plain report](http://rawgit.com/rqndom/mcp/master/examples/plain_report.html)
+* [Extended report with timeline](http://rawgit.com/rqndom/mcp/master/examples/extended_report.html)
 
 ## TODO
 
