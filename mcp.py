@@ -36,6 +36,101 @@ import re
 import json
 
 ########################################################################
+# Embeded data
+########################################################################
+
+def _formatter_min_js():
+	js = r'''
+		eval(function(p,a,c,k,e,r){e=function(c){return(c<a?'':e(parseIn
+		t(c/a)))+((c=c%a)>35?String.fromCharCode(c+29):c.toString(36))};
+		if(!''.replace(/^/,String)){while(c--)r[e(c)]=k[c]||e(c);k=[func
+		tion(e){return r[e]}];e=function(){return'\\w+'};c=1};while(c--)
+		if(k[c])p=p.replace(new RegExp('\\b'+e(c)+'\\b','g'),k[c]);retur
+		n p}('3 22=u;3 23=5;3 N=2J.2K(a.24(\'N\').O);3 P=N.P;3 z=N.z;3 L
+		=N.L;3 l=2L 2M();9(3 t 2N N.P){l.G(t)}l.2O();f(l.m>0){3 Q=12(l[0
+		]);3 1b=12(l[l.m-1]);3 1c=Q;3 1d=1b}4 25(R,D){f(l.m==0)6[A,A];6[
+		1z(S.2P(R,D)),1z(S.1A(R,D))]}4 13(t){6(t-Q)/(1b-Q)*(p.E+1)-1}4 1
+		z(1e){6 Q+(1e+1)*(1b-Q)/(p.E+1)}3 B,14;4 26(){B=27;14=0.28;9(3 g
+		 b z){3 x=g.d+g.k;f(x>B)B=x;9(3 C b g.H){3 y=C.d+C.k;f(y>14)14=y
+		}}9(3 T b L){3 x=T.d+T.k;f(x>B)B=x}}3 U=[];4 29(){f(D===A)6 l.r(
+		x=>P[x]);6 l.2Q(x=>(1c<=12(x)&&12(x)<=1d)).r(x=>P[x])}4 1B(){3 1
+		f=29();f(U.m==1f.m)f(U.2R((x,i,2S)=>(x===1f[i])))6 u;U=1f;3 1C=2
+		7.0/U.m;9(3 g b z){g.d=0;g.k=0;9(3 C b g.H){C.d=0;C.k=0}}9(3 T b
+		 L){T.d=0;T.k=0}4 2a(M){6 z[M[0]]}4 2b(M){6 L[M[1]]}4 2c(M){6 z[
+		M[0]].H[M[2]]}9(3 2e b U){9(3 1D b 2e){3 2f=1D[0];3 2g=1D.2h(1);
+		9(3 1E b[2a,2b,2c]){3 1F=1E(2f);3 1G=2T(2g.r(1E));1G.2U(1F);1F.d
+		+=1C;9(3 2i b 1G)2i.k+=1C}}}26();6 15}3 p=a.24(\'V\');3 8=p.2V(\
+		'2d\');3 V=A;4 1H(){3 w=p.E;3 h=p.2W;8.2j="#2X";8.2k(0,0,w,h);f(
+		l.m<=1||w==0)6;f(V===A||V.E!=w){3 t=l.r(12);3 s=l.r(x=>P[x].m);3
+		 2l=S.1A(...s);8.1I();9(3 i=0;i<t.m;++i){3 x=13(t[i])+0.5;3 y=s[
+		i]/2l;8.1g(x,h);8.1h(x,h*(1-y))}8.1J="#2Y";8.1K();3 1i=S.2Z(l.m/
+		23);3 W=[];W[0]=0;3 j=1;9(3 i=1;i<1i;++i){3 16=(t[t.m-1]-t[0])*i
+		/1i+t[0];30(t[j]<16)++j;t.1L(j,0,16);s.1L(j,0,(s[j-1]*(t[j]-16)+
+		s[j]*(16-t[j-1]))/(t[j]-t[j-1]));W[i]=j}W[1i]=t.m-1;3 1M=W.2h(0,
+		-1).r((x,i)=>[x,W[i+1]]);3 2m=1M.r(x=>(t[x[1]]+t[x[0]])/2);3 2n=
+		4(x){3 1N=0;9(3 i=x[0];i<x[1];++i)1N+=0.5*(s[i+1]+s[i])*(t[i+1]-
+		t[i]);6 1N/(t[x[1]]-t[x[0]])};3 1O=1M.r(2n);3 2o=S.1A(...1O);3 x
+		=2m.r(t=>(13(t)+0.5));3 y=1O.r(s=>h*(1-s/2o));8.1I();8.1g(x[0],y
+		[0]);9(3 i=1;i<x.m;++i)8.1h(x[i],y[i]);8.1J="#31";8.1K();V=8.32(
+		0,0,w,h)}8.33(V,0,0);f(D!==A){3 17=13(1c)+0.5;3 1j=13(1d)+0.5;8.
+		2p=0.5;8.2j="#2q";8.2k(17,0,1j-17,h);8.2p=1;8.1J="#2q";8.1I();8.
+		1g(17,0);8.1h(17,h);8.1g(1j,0);8.1h(1j,h);8.1K()}}4 18(d,k){6 S.
+		34((d+k)/14*(7-0.28))}4 1P(F){6 a.35(F)}4 1Q(F){3 X=a.v(\'36\');
+		X.O=F;6 X}4 1k(F){3 X=a.v(\'37\');X.O=F;6 X}4 Y(2r){3 Y=a.v(\'Y\
+		');3 1l=a.v(\'1l\');Y.q(1l);9(3 2s b 2r){3 1m=a.v(\'1m\');1l.q(1
+		m);9(3 2t b 2s)1m.q(2t)}6 Y}4 1n(19,Z=15){3 10=[];3 1o=[];4 1R(1
+		8,F){3 I=a.v(\'2u\');I.1p=\'Z\'+18;I.O=F;6 I}4 2v(d,k){3 1q=a.v(
+		\'1S\');3 1r=a.v(\'1S\');3 1s=a.v(\'1S\');1r.1p=\'c\';1s.1p=\'o\
+		';1r.J.E=d/B*1t+\'1e\';1s.J.E=k/B*1t+\'1e\';1q.q(1r);1q.q(1s);6 
+		1q}4 2w(d,k){3 I=a.v(\'38\');I.O=d.1u(2)+\'\\t\'+(d+k).1u(2)+\'\
+		\t\';I.J.39=\'3a\';6 I}9(3[x,c,o,t]b 19){f(t===A){10.G(1P(\'\\n\
+		\n\\n\'));1o.G(1R(0,\'\\n\\t(...)\\n\'+\'\\n\'))}3b{x.1T=2w(c,o)
+		;x.1v=2v(c,o);x.1U=1R(Z?18(c,o):0,t+\'\\n\');10.G(x.1T);10.G(x.1
+		v);10.G(1P(\'\\n\'));1o.G(x.1U)}}3 1V=a.v(\'2u\');9(3 x b 10)1V.
+		q(x);6 Y([[1V],1o])}4 2x(){1B();3 2y=1n(z.r(4(x){6[x,x.d,x.k,x.1
+		W]}),u);3 2z=1n(L.r(4(x){6[x,x.d,x.k,x.g+\': \'+x.1W]}),u);a.K.q
+		(1Q(\'3c\'));a.K.q(1k(\'3d\'));a.K.q(2y);a.K.q(1k(\'3e\'));a.K.q
+		(2z);a.K.q(1Q(\'3f-3g-C 3h\'));9(3 g b z){3 19=g.H.r(4(x){6[x,x.
+		d,x.k,x.C+\'\\t\'+x.F]});3 1w=[];9(3 i=1;i<g.H.m;++i)f(g.H[i].C-
+		1!=g.H[i-1].C)1w.G(i);1w.3i();9(3 s b 1w)19.1L(s,0,[{},0,0,A]);a
+		.K.q(1k(g.1W));a.K.q(1n(19))}}4 2A(){f(!1B())6;4 1x(2B,Z=15){9(3
+		 x b 2B){3 c=x.d;3 o=x.k;x.1T.O=c.1u(2)+\'\\t\'+(c+o).1u(2)+\'\\
+		t\';x.1v.2C[0].J.E=c*1t/B;x.1v.2C[1].J.E=o*1t/B;x.1U.1p=\'Z\'+(Z
+		?18(c,o):0)}}1x(z,u);1x(L,u);9(3 g b z)1x(g.H)}4 1X(){3 11=1Y(p.
+		J.1Z);p.E=p.3j-2*11;1H()}20.1y(\'3k\',1X,u);3 1a=u;3 R=0,D=A;4 2
+		1(2D){[1c,1d]=25(R,D);1H();f(2D)2A()}4 2E(e){1a=15;3 11=1Y(p.J.1
+		Z);R=e.2F-p.2G-11;D=A}4 2H(e){f(!1a)6;3 11=1Y(p.J.1Z);D=e.2F-p.2
+		G-11;21(22)}4 2I(e){f(!1a)6;1a=u;21(15)}p.1y(\'3l\',2E,u);20.1y(
+		\'3m\',2H,u);20.1y(\'3n\',2I,u);2x();1X();',62,210,'|||var|funct
+		ion||return||ctx|for|document|of||current||if|module||||outer|ts
+		|length|||canvas|appendChild|map|||false|createElement||||module
+		s|null|max_percent|line|x_end|width|text|push|code|block|style|b
+		ody|functions|frame|data|innerHTML|samples|t0|x_start|Math|func|
+		partial_samples|timeline|bin_i|element|table|heat|stat_column|bo
+		rder|parseFloat|t_to_px|lines_max_percent|true|t_curr|x0|heat_va
+		lue|lines|track_mouse|t1|t_start|t_end|px|new_samples|moveTo|lin
+		eTo|bin_count|x1|sub_title|tr|td|profile_table|code_column|class
+		Name|back|curr|out|200|toFixed|html_bar|separators|scoped_update
+		|addEventListener|px_to_t|max|compute_usage|weight|stack|scoped_
+		get|scoped_curr|scoped_outers|draw_timeline|beginPath|strokeStyl
+		e|stroke|splice|bin_i2|int_s|bin_s|text_node|title|heat_block|sp
+		an|html_num|html_heat|stat_pre|name|on_resize|parseInt|borderWid
+		th|window|update_data|dynamic_update|bin_size|getElementById|t_w
+		indow|compute_max|100|001|get_samples|get_module|get_function|ge
+		t_line||stacks|curr_frame|outer_frames|slice|scoped_outer|fillSt
+		yle|fillRect|s_max|bin_t|integral_s|bin_s_max|globalAlpha|ff0000
+		|columns|column|row|pre|bar_block|num_block|insert_report|module
+		_table|function_table|update_usage|scoped_table|children|update_
+		all|on_mouse_down|clientX|offsetLeft|on_mouse_move|on_mouse_up|J
+		SON|parse|new|Array|in|sort|min|filter|every|_|Set|delete|getCon
+		text|height|ffffff|eeeeee|ceil|while|0000ff|getImageData|putImag
+		eData|floor|createTextNode|h1|h2|div|display|inline|else|Summary
+		|Modules|Functions|Line|by|profile|reverse|offsetWidth|resize|mo
+		usedown|mousemove|mouseup'.split('|'),0,{}))
+	'''
+	return re.sub('\t|\n', '', js)
+
+########################################################################
 # Patching
 ########################################################################
 
@@ -431,7 +526,7 @@ class ReportStructure:
 		self.document.find('body').append(Xml('script', attr, text).append(Xml(None)))
 		
 	def write_to(self, file_name):
-		self.document.tree().write(file_name, encoding='utf-8')
+		self.document.tree().write(file_name, encoding='utf-8', method='html')
 	
 class Formatter:
 	def __init__(self, accumulator, args):
@@ -654,7 +749,11 @@ class Formatter:
 			attr={'type': 'application/json', 'id': 'data'},
 			text=json.dumps(sample_data)
 		)
-		report.add_script(attr={'src': 'formatter.js'})
+		report.add_script(
+			attr={'type': 'text/javascript'},
+			text=_formatter_min_js()
+		)
+		#~report.add_script(attr={'src': 'formatter.js'})
 
 ########################################################################
 # Main program
