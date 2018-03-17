@@ -4,6 +4,7 @@
 # Version: 2015-02-19
 
 # TODO: que faire pour un profil fonction du temps (cf. profileur js)
+# TODO: memory profiler statistique aussi ?
 # TODO: faire en sorte de pouvoir se profiler soi meme: enorme
 # TODO: deregistrer les threads spawnés par multiprocessing (genre les Queues)
 # TODO: a chaque spawn de process, le sampler reinstalle les patchs par dessus
@@ -11,6 +12,10 @@
 #		unifier le patchage de lib / monitoring de thread spawn
 #		(plutot un couple spawn_process / spawn_thread)
 # TODO: encore des conflits de noms / '__main__' quand l'interval est très court
+# TODO: rajouter dans la doc que les thread spawnés par du C, etc.
+#		(ie. pas par threading, thread ou multiprocessing), ne sont pas trackés
+#		automatiquement. Il faut les passer dans @sampler.watch_thread & co. /
+#		ou ajouter un mecanisme si non existant
 
 __version__ = '0.1'
 __author__ = 'Romain Vavassori'
@@ -821,9 +826,9 @@ def main():
 		while profiled_proc.exitcode == None:
 			accumulator.listen(args.interval)
 	except KeyboardInterrupt:
-		os.kill(proc.pid, signal.SIGINT)
+		os.kill(profiled_proc.pid, signal.SIGINT)
 	except SystemExit:
-		os.kill(proc.pid, signal.SIGTERM)
+		os.kill(profiled_proc.pid, signal.SIGTERM)
 
 	# Cleanup and make report
 	profiled_proc.join()

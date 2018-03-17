@@ -3,7 +3,7 @@
 MCP is a statistical profiling module for Python.
 
 The profiling of a running script is based on sampling the script state
-at random time intervals (Monte Carlo), whereas other profilers usually
+at random time intervals (Monte Carlo style), whereas other profilers usually
 use deterministic approach by tracing each function call.
 
 Our method allows us to have a constant low overhead as well as
